@@ -1,6 +1,6 @@
 # Foodike Backend
 
-A microservice-ready modular monolith backend for a food delivery app, built with Kotlin and Ktor. Designed as a reference architecture that demonstrates how to structure a backend so it can scale from a single deploy to independent microservices without rewriting business logic.
+A microservice-ready modular monolith backend for a food delivery app, built with Kotlin and Ktor. It is being developed as a reference architecture that can scale from a single deploy to independent microservices without rewriting business logic.
 
 ## Why This Exists
 
@@ -32,7 +32,27 @@ Most food delivery backend tutorials are either too simple (single-file CRUD) or
 └─────────────────────────────────────────────────────┘
 ```
 
-Each service module contains its own `domain/`, `infrastructure/`, `api/`, `di/`, and `migrations/` — fully self-contained. Service modules **never** import from each other. Cross-service communication happens through the event bus (async) or query ports (sync), both of which are interfaces that can be swapped from in-process calls to network calls when you extract a service.
+The target architecture is for each service module to contain its own `domain/`, `infrastructure/`, `api/`, `di/`, and `migrations/`. The current repository has a lighter scaffold in place and is moving toward that structure incrementally.
+
+## Current Status
+
+Implemented today:
+- Multi-module Gradle build
+- Shared `common`, `events`, `auth`, and `persistence` modules
+- Service module boundaries for user, restaurant, order, payment, notification, and tracking
+- Ktor application shell in `app/`
+- Placeholder routes and minimal domain models
+- Basic integration test for app startup
+
+Planned but not implemented yet:
+- PostgreSQL/PostGIS setup
+- Redis integration
+- Flyway migrations
+- Razorpay, Firebase, and S3 integrations
+- Swagger/OpenAPI docs
+- Micrometer/Prometheus metrics
+- Full domain services, repositories, DTOs, and production flows
+- Kotest, MockK, and Testcontainers-based test suite
 
 ## Tech Stack
 
@@ -41,27 +61,25 @@ Each service module contains its own `domain/`, `infrastructure/`, `api/`, `di/`
 | Language | Kotlin 2.x |
 | Framework | Ktor 3.x (Netty) |
 | Serialization | kotlinx.serialization |
-| Database | PostgreSQL 16 + PostGIS |
-| ORM | Exposed (DAO + DSL) |
-| Migrations | Flyway (per-module) |
-| Cache | Redis 7 (Lettuce) |
+| Database | H2 today, PostgreSQL/PostGIS planned |
+| ORM | Exposed DSL |
+| Migrations | Planned |
+| Cache | Planned |
 | DI | Koin 4 |
 | Event Bus | In-process SharedFlow (swappable to RabbitMQ) |
 | Auth | JWT (java-jwt) |
-| Payments | Razorpay Java SDK |
-| Push Notifications | Firebase Admin SDK |
-| Storage | AWS S3 Kotlin SDK |
-| Observability | Micrometer + Prometheus + Logback |
-| Testing | Ktor testApplication + Kotest + MockK + Testcontainers |
+| Payments | Planned |
+| Push Notifications | Planned |
+| Storage | Planned |
+| Observability | Logback today, broader observability planned |
+| Testing | Ktor `testApplication` today, broader test stack planned |
 
 ## Getting Started
 
 ### Prerequisites
 
-- JDK 21+
-- Docker and Docker Compose
-- A Razorpay test account (for payment flow)
-- A Firebase project (for push notifications)
+- JDK 17+
+- No external infrastructure is required for the current scaffold
 
 ### Run Locally
 
@@ -70,28 +88,26 @@ Each service module contains its own `domain/`, `infrastructure/`, `api/`, `di/`
 git clone https://github.com/gautam84/foodike-backend.git
 cd foodike-backend
 
-# Start Postgres and Redis
-docker-compose up -d postgres redis
-
-# Copy environment template and fill in your keys
-cp .env.example .env
-
 # Run the application
 ./gradlew :app:run
 ```
 
-The server starts at `http://localhost:8080`. Swagger docs are at `http://localhost:8080/docs`.
+The server starts at `http://localhost:8080`.
 
 ### Environment Variables
 
+The current scaffold only uses application config from `app/src/main/resources/application.yaml`.
+
+Planned environment variables for future infrastructure:
+
 | Variable | Description | Required |
 |---|---|---|
-| `DB_URL` | Postgres JDBC URL | Yes |
-| `DB_USER` | Postgres username | Yes |
-| `DB_PASSWORD` | Postgres password | Yes |
-| `REDIS_URL` | Redis connection URL | Yes |
-| `JWT_SECRET` | Secret for signing JWTs | Yes |
-| `JWT_ISSUER` | JWT issuer claim | Yes |
+| `DB_URL` | Postgres JDBC URL | Planned |
+| `DB_USER` | Postgres username | Planned |
+| `DB_PASSWORD` | Postgres password | Planned |
+| `REDIS_URL` | Redis connection URL | Planned |
+| `JWT_SECRET` | Secret for signing JWTs | Planned |
+| `JWT_ISSUER` | JWT issuer claim | Planned |
 | `RAZORPAY_KEY` | Razorpay API key | For payments |
 | `RAZORPAY_SECRET` | Razorpay API secret | For payments |
 | `FIREBASE_CREDENTIALS` | Path to Firebase service account JSON | For notifications |
@@ -103,9 +119,6 @@ The server starts at `http://localhost:8080`. Swagger docs are at `http://localh
 ```bash
 # Unit tests
 ./gradlew :tests:test --tests "com.example.foodike.unit.*"
-
-# Integration tests (requires Docker for Testcontainers)
-./gradlew :tests:test --tests "com.example.foodike.integration.*"
 
 # All tests
 ./gradlew :tests:test
@@ -133,7 +146,7 @@ foodike-backend/
 └── tests/               # Unit + integration tests
 ```
 
-Each service module follows the same internal structure:
+Target per-service structure:
 
 ```
 services/xyz-service/
@@ -171,39 +184,39 @@ services/*           ← shared modules only (NEVER other services)
 app                  ← all services (composition root)
 ```
 
-**The critical rule:** service modules never depend on each other. This is enforced by Gradle. If `order-service` needs data from `restaurant-service`, it goes through a `MenuQueryPort` interface, not a direct import.
+**The critical rule:** service modules should never depend on each other. The project is structured around that rule, and module dependencies should continue to preserve it. If `order-service` needs data from `restaurant-service`, it should go through a query port interface rather than a direct import.
 
 ## Three Extraction Seams
 
-This architecture is designed so that extracting any module into an independent microservice requires **zero business logic changes**. The three seams that make this possible:
+This architecture is intended so that extracting any module into an independent microservice can happen with minimal business-logic changes. These seams are part of the target design and are only partially implemented today:
 
 ### 1. Event Bus
 
-Services communicate asynchronously through `EventBus`. Today it's backed by Kotlin `SharedFlow` (in-process). To extract, swap the Koin binding to `RabbitMqEventBus`.
+Services communicate asynchronously through `EventBus`. Today the repo includes an in-process event bus. A broker-backed event bus is planned for extraction scenarios.
 
 ```kotlin
 // Today (monolith)
 single<EventBus> { InProcessEventBus() }
 
-// After extraction
+// Planned after extraction
 single<EventBus> { RabbitMqEventBus(connectionFactory) }
 ```
 
 ### 2. Query Ports
 
-When a service needs synchronous data from another service, it calls a port interface. Today the implementation is a direct in-process call. To extract, swap it to an HTTP client.
+When a service needs synchronous data from another service, it should call a port interface. The concrete in-process and HTTP adapters shown below are target examples and are not fully implemented yet.
 
 ```kotlin
-// Today (monolith) — same JVM, direct call
+// Target monolith form
 single<MenuQueryPort> { InProcessMenuAdapter(get()) }
 
-// After extraction — HTTP call to restaurant-service
+// Planned extraction form
 single<MenuQueryPort> { HttpMenuClient(httpClient, env("RESTAURANT_SERVICE_URL")) }
 ```
 
 ### 3. Per-Module Migrations
 
-Each service has its own Flyway migration directory and history table. Today they all run against one Postgres. When extracted, each service points at its own database.
+Each service is intended to own its own migrations. Flyway integration is planned and not wired into the current scaffold yet.
 
 ### Extraction Checklist
 
@@ -259,7 +272,7 @@ To extract any service into an independent microservice:
 ### Search
 - `GET /search?q=&type=` — full-text search
 
-Full API documentation is available at `/docs` when running locally.
+The endpoint list above reflects the target API surface. The current implementation only exposes a small subset of placeholder routes while the modules are being built out.
 
 ## License
 

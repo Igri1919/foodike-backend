@@ -22,32 +22,29 @@ Thanks for your interest in contributing! This guide will help you understand th
    ```
 
 2. **Install prerequisites:**
-   - JDK 21 or later
-   - Docker and Docker Compose
+   - JDK 17 or later
    - IntelliJ IDEA (recommended) or any Kotlin-capable IDE
 
-3. **Start the infrastructure:**
-   ```bash
-   docker-compose up -d postgres redis
-   ```
-
-4. **Copy the environment file:**
-   ```bash
-   cp .env.example .env
-   ```
-   Fill in at least `DB_URL`, `DB_USER`, `DB_PASSWORD`, `REDIS_URL`, and `JWT_SECRET`. Payment and notification keys are only needed if you're working on those modules.
-
-5. **Run the app:**
+3. **Run the app:**
    ```bash
    ./gradlew :app:run
    ```
 
-6. **Run the tests:**
+4. **Run the tests:**
    ```bash
    ./gradlew :tests:test
    ```
 
 If everything passes, you're ready to contribute.
+
+## Current Scope
+
+The repository currently contains a modular scaffold, not the full target platform. Keep that distinction in mind when contributing:
+
+- Implemented today: module boundaries, shared libraries, app composition root, placeholder routes, minimal models, and a basic integration test
+- Planned: PostgreSQL, Redis, Flyway, external service adapters, richer domain logic, and a larger test stack
+
+Contributions should either improve the current scaffold or move one module closer to the target architecture without pretending the rest already exists.
 
 ## Architecture Rules
 
@@ -55,14 +52,14 @@ These rules are non-negotiable. PRs that violate them will be requested to chang
 
 ### 1. Service modules never import from each other
 
-This is the most important rule. `order-service` cannot import anything from `restaurant-service`, `user-service`, `payment-service`, or any other service module. Gradle enforces this at compile time.
+This is the most important rule. `order-service` should not import anything from `restaurant-service`, `user-service`, `payment-service`, or any other service module.
 
 **Why:** Each service module is a future microservice. Direct imports create coupling that would require a rewrite during extraction.
 
 **How cross-service communication works:**
 
-- **Async (fire-and-forget):** Publish an event through `EventBus`. Example: `OrderService` publishes `OrderPlaced`, and `PaymentService` consumes it.
-- **Sync (need a response):** Define a query port interface in the calling service's `domain/port/` directory. Implement it as an `InProcess*Adapter` in `infrastructure/adapter/`. Example: `order-service` defines `MenuQueryPort` and calls it to fetch menu item prices at checkout.
+- **Async (fire-and-forget):** Publish an event through `EventBus`.
+- **Sync (need a response):** Define a query port interface in the calling service and keep the adapter at the edge of the module.
 
 If your feature needs data from another service and neither pattern exists for it yet, create a new query port. Don't take a shortcut by adding a cross-service Gradle dependency.
 
@@ -81,9 +78,9 @@ Event classes live in `shared/events/`. If you need a new event:
 2. Publish it from the service where the state change occurs
 3. Consume it in whichever services need to react
 
-### 4. Every service owns its migrations
+### 4. Every service owns its persistence concerns
 
-Database migrations live inside the service module at `migrations/db/migration/<service-name>/`. Don't put order-related tables in user-service's migration directory. Each service should only create and modify tables it owns.
+Database migrations are planned per service. Until that is implemented, keep tables, repositories, and persistence wiring scoped to the owning service.
 
 ### 5. DTOs stay in the API layer
 
@@ -136,7 +133,7 @@ Check the [Issues](https://github.com/gautam84/foodike-backend/issues) tab. Issu
    - Add it to `settings.gradle.kts`
    - Create its Koin module and register it in `app/di/AppModule.kt`
    - Create its route registration in `app/plugins/Routing.kt`
-   - Add its Flyway migration path in `app/Application.kt`
+   - Add persistence and migration wiring only if that functionality is actually being introduced
    - Make sure it only depends on `shared/` modules in `build.gradle.kts`
 
 ## Code Style
@@ -177,7 +174,7 @@ Every PR that adds or changes business logic should include tests.
 
 ### Unit Tests
 
-For domain services. No database, no server, no network.
+For domain services. No database, no server, no network. The examples below show the intended testing style once the richer test stack is introduced.
 
 ```kotlin
 // tests/src/test/kotlin/com/example/foodike/unit/order/OrderServiceTest.kt
@@ -208,7 +205,7 @@ class OrderServiceTest : FunSpec({
 
 ### Integration Tests
 
-For routes and database operations. Use Ktor's `testApplication` and Testcontainers for Postgres.
+For route and module behavior. The current repo already uses Ktor's `testApplication`. Testcontainers-based persistence tests are planned once external infrastructure is added.
 
 ```kotlin
 // tests/src/test/kotlin/com/example/foodike/integration/order/OrderRoutesTest.kt
@@ -233,9 +230,9 @@ class OrderRoutesTest : FunSpec({
 
 | Layer | What to test | How |
 |---|---|---|
-| Domain services | Business rules, state transitions, validation | Unit test with MockK |
+| Domain services | Business rules, state transitions, validation | Unit test |
 | Domain models | State machine transitions (e.g., `OrderStatus`) | Unit test, no mocks |
-| Repositories | SQL correctness, constraints | Integration test with Testcontainers |
+| Repositories | SQL correctness, constraints | Integration test once persistence is added |
 | Routes | HTTP status codes, request validation, auth | Integration test with `testApplication` |
 | Event flow | Events published on state changes | Unit test, verify `eventBus.publish()` |
 

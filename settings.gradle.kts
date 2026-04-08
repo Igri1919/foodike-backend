@@ -1,4 +1,4 @@
-rootProject.name = "foodike"
+rootProject.name = "foodike-backend"
 
 dependencyResolutionManagement {
     repositories {

@@ -12,6 +12,24 @@ application {
     mainClass = "com.example.foodike.ApplicationKt"
 }
 
+tasks.named<JavaExec>("run") {
+    workingDir = rootProject.projectDir
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        envFile.readLines()
+            .filter { it.isNotBlank() && !it.startsWith("#") }
+            .forEach { line ->
+                val normalized = line.removePrefix("export ").trim()
+                val sep = normalized.indexOf('=')
+                if (sep > 0) {
+                    val key = normalized.substring(0, sep).trim()
+                    val value = normalized.substring(sep + 1).trim().trim('"', '\'')
+                    environment(key, value)
+                }
+            }
+    }
+}
+
 dependencies {
     implementation(project(":shared:common"))
     implementation(project(":shared:events"))

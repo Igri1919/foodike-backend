@@ -6,33 +6,33 @@ ktor:
     port: 8080
 
 database:
-  jdbcUrl: "jdbc:h2:mem:foodike;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE"
-  driverClassName: "org.h2.Driver"
-  username: "sa"
-  password: ""
-  maximumPoolSize: 10
+  jdbcUrl: "${DB_URL:jdbc:h2:mem:foodike;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE}"
+  driverClassName: "${DB_DRIVER:org.h2.Driver}"
+  username: "${DB_USER:sa}"
+  password: "${DB_PASSWORD:}"
+  maximumPoolSize: "${DB_MAX_POOL_SIZE:10}"
 
 redis:
-  url: "redis://127.0.0.1:6379"
+  url: "${REDIS_URL:redis://127.0.0.1:6379}"
 
 jwt:
-  secret: "local-dev-secret"
-  issuer: "foodike"
-  audience: "foodike-clients"
-  accessExpiryMillis: 900000
-  refreshExpiryMillis: 2592000000
+  secret: "${JWT_SECRET:local-dev-secret}"
+  issuer: "${JWT_ISSUER:foodike}"
+  audience: "${JWT_AUDIENCE:foodike-clients}"
+  accessExpiryMillis: "${JWT_ACCESS_EXPIRY_MILLIS:900000}"
+  refreshExpiryMillis: "${JWT_REFRESH_EXPIRY_MILLIS:2592000000}"
 
 auth:
   otp:
-    provider: "console"
-    length: 6
-    ttlSeconds: 300
-    sendLimit: 3
-    sendWindowSeconds: 600
-    verifyFailureLimit: 5
-    verifyWindowSeconds: 900
-    blockDurationSeconds: 900
+    provider: "${OTP_PROVIDER:console}"
+    length: "${AUTH_OTP_LENGTH:6}"
+    ttlSeconds: "${AUTH_OTP_TTL_SECONDS:300}"
+    sendLimit: "${AUTH_OTP_SEND_LIMIT:3}"
+    sendWindowSeconds: "${AUTH_OTP_SEND_WINDOW_SECONDS:600}"
+    verifyFailureLimit: "${AUTH_OTP_VERIFY_FAILURE_LIMIT:5}"
+    verifyWindowSeconds: "${AUTH_OTP_VERIFY_WINDOW_SECONDS:900}"
+    blockDurationSeconds: "${AUTH_OTP_BLOCK_DURATION_SECONDS:900}"
     twilio:
-      accountSid: ""
-      authToken: ""
-      fromNumber: ""
+      accountSid: "${TWILIO_ACCOUNT_SID:}"
+      authToken: "${TWILIO_AUTH_TOKEN:}"
+      fromNumber: "${TWILIO_FROM_NUMBER:}"

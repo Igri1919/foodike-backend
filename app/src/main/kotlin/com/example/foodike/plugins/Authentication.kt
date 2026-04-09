@@ -40,17 +40,17 @@ fun Application.configureAuthentication() {
 
 private fun Application.initializeDatabase(): Database {
     val databaseConfig = DatabaseConfig(
-        jdbcUrl = configValue("database.jdbcUrl", "DB_URL"),
-        driverClassName = configValue("database.driverClassName", "DB_DRIVER"),
-        username = configValue("database.username", "DB_USER"),
-        password = configValue("database.password", "DB_PASSWORD"),
-        maximumPoolSize = configValue("database.maximumPoolSize", "DB_MAX_POOL_SIZE").toInt(),
+        jdbcUrl = configValue("database.jdbcUrl"),
+        driverClassName = configValue("database.driverClassName"),
+        username = configValue("database.username"),
+        password = configValue("database.password"),
+        maximumPoolSize = configValue("database.maximumPoolSize").toInt(),
     )
     return DatabaseFactory.create(databaseConfig)
 }
 
 private fun Application.initializeRedis(logger: org.slf4j.Logger): RedisResources? {
-    val redisUrl = configValue("redis.url", "REDIS_URL")
+    val redisUrl = configValue("redis.url")
     return try {
         val client = RedisClient.create(redisUrl)
         val connection: StatefulRedisConnection<String, String> = client.connect()
@@ -63,27 +63,27 @@ private fun Application.initializeRedis(logger: org.slf4j.Logger): RedisResource
 
 private fun Application.installDependencyInjection(database: Database, redisResources: RedisResources?) {
     val jwtConfig = JwtConfig(
-        secret = configValue("jwt.secret", "JWT_SECRET"),
-        issuer = configValue("jwt.issuer", "JWT_ISSUER"),
-        audience = configValue("jwt.audience", "JWT_AUDIENCE"),
-        accessExpiryMillis = configValue("jwt.accessExpiryMillis", "JWT_ACCESS_EXPIRY_MILLIS").toLong(),
-        refreshExpiryMillis = configValue("jwt.refreshExpiryMillis", "JWT_REFRESH_EXPIRY_MILLIS").toLong(),
+        secret = configValue("jwt.secret"),
+        issuer = configValue("jwt.issuer"),
+        audience = configValue("jwt.audience"),
+        accessExpiryMillis = configValue("jwt.accessExpiryMillis").toLong(),
+        refreshExpiryMillis = configValue("jwt.refreshExpiryMillis").toLong(),
     )
     val jwtService = JwtService(jwtConfig)
     val authProperties = AuthProperties(
-        otpLength = configValue("auth.otp.length", "AUTH_OTP_LENGTH").toInt(),
-        otpTtl = Duration.ofSeconds(configValue("auth.otp.ttlSeconds", "AUTH_OTP_TTL_SECONDS").toLong()),
-        maxOtpSendsPerWindow = configValue("auth.otp.sendLimit", "AUTH_OTP_SEND_LIMIT").toInt(),
-        otpSendWindow = Duration.ofSeconds(configValue("auth.otp.sendWindowSeconds", "AUTH_OTP_SEND_WINDOW_SECONDS").toLong()),
-        maxOtpVerifyFailures = configValue("auth.otp.verifyFailureLimit", "AUTH_OTP_VERIFY_FAILURE_LIMIT").toInt(),
-        otpVerifyWindow = Duration.ofSeconds(configValue("auth.otp.verifyWindowSeconds", "AUTH_OTP_VERIFY_WINDOW_SECONDS").toLong()),
-        otpBlockDuration = Duration.ofSeconds(configValue("auth.otp.blockDurationSeconds", "AUTH_OTP_BLOCK_DURATION_SECONDS").toLong()),
+        otpLength = configValue("auth.otp.length").toInt(),
+        otpTtl = Duration.ofSeconds(configValue("auth.otp.ttlSeconds").toLong()),
+        maxOtpSendsPerWindow = configValue("auth.otp.sendLimit").toInt(),
+        otpSendWindow = Duration.ofSeconds(configValue("auth.otp.sendWindowSeconds").toLong()),
+        maxOtpVerifyFailures = configValue("auth.otp.verifyFailureLimit").toInt(),
+        otpVerifyWindow = Duration.ofSeconds(configValue("auth.otp.verifyWindowSeconds").toLong()),
+        otpBlockDuration = Duration.ofSeconds(configValue("auth.otp.blockDurationSeconds").toLong()),
     )
     val otpProviderConfig = OtpProviderConfig(
-        provider = configValue("auth.otp.provider", "OTP_PROVIDER"),
-        twilioAccountSid = configValue("auth.otp.twilio.accountSid", "TWILIO_ACCOUNT_SID").ifBlank { null },
-        twilioAuthToken = configValue("auth.otp.twilio.authToken", "TWILIO_AUTH_TOKEN").ifBlank { null },
-        twilioFromNumber = configValue("auth.otp.twilio.fromNumber", "TWILIO_FROM_NUMBER").ifBlank { null },
+        provider = configValue("auth.otp.provider"),
+        twilioAccountSid = configValue("auth.otp.twilio.accountSid").ifBlank { null },
+        twilioAuthToken = configValue("auth.otp.twilio.authToken").ifBlank { null },
+        twilioFromNumber = configValue("auth.otp.twilio.fromNumber").ifBlank { null },
     )
 
     install(Koin) {
@@ -115,9 +115,8 @@ private fun Application.registerShutdownHooks(redisResources: RedisResources?) {
     }
 }
 
-private fun Application.configValue(path: String, envVar: String): String =
-    System.getenv(envVar)
-        ?: environment.config.property(path).getString()
+private fun Application.configValue(path: String): String =
+    environment.config.property(path).getString()
 
 private data class RedisResources(
     val client: RedisClient,

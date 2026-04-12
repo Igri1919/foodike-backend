@@ -1,19 +1,19 @@
 [versions]
 exposed = "0.61.0"
-h2 = "2.3.232"
-koin = "4.1.2-Beta1"
-kotlin = "2.3.0"
+h2 = "2.4.240"
+koin = "4.2.0"
+kotlin = "2.3.20"
 ktor = "3.4.2"
 logback = "1.5.32"
-hikari = "6.2.1"
-jwt = "4.5.0"
-jbcrypt = "0.4"
-postgres = "42.7.7"
+hikari = "7.0.2"
+jwt = "4.5.1"
+bcrypt = "0.10.2"
+postgres = "42.7.8"
 lettuce = "7.5.0.RELEASE"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
@@ -40,7 +40,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "jbcrypt" }
+bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 
 [bundles]
 ktor-server-base = [

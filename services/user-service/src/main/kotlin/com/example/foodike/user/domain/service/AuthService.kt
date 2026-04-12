@@ -24,7 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import java.security.SecureRandom
-import org.mindrot.jbcrypt.BCrypt
+import at.favre.lib.crypto.bcrypt.BCrypt
 
 data class AuthProperties(
     val otpLength: Int = 6,
@@ -165,7 +165,7 @@ class AuthService(
         val record = refreshTokenStore.findValidByUserId(userId)
             ?: throw UnauthorizedException("Refresh token not found")
 
-        val matches = BCrypt.checkpw(refreshTokenDigest(refreshToken), record.tokenHash)
+        val matches = BCrypt.verifyer().verify(refreshTokenDigest(refreshToken).toCharArray(), record.tokenHash).verified
         if (!matches) {
             refreshTokenStore.deleteByUserId(userId)
             throw UnauthorizedException("Refresh token replay detected. Please sign in again.")
@@ -185,7 +185,7 @@ class AuthService(
         }
 
         val record = refreshTokenStore.findValidByUserId(userId) ?: return
-        val matches = BCrypt.checkpw(refreshTokenDigest(refreshToken), record.tokenHash)
+        val matches = BCrypt.verifyer().verify(refreshTokenDigest(refreshToken).toCharArray(), record.tokenHash).verified
         if (!matches) {
             refreshTokenStore.deleteByUserId(userId)
             throw UnauthorizedException("Refresh token does not match current session")
@@ -221,7 +221,7 @@ class AuthService(
             RefreshTokenRecord(
                 id = UUID.randomUUID().toString(),
                 userId = userId,
-                tokenHash = BCrypt.hashpw(refreshTokenDigest(refreshToken), BCrypt.gensalt()),
+                tokenHash = BCrypt.withDefaults().hashToString(12, refreshTokenDigest(refreshToken).toCharArray()),
                 expiresAt = decoded.expiresAt.toInstant(),
                 createdAt = now(),
             ),

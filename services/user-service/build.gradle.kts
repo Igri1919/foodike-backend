@@ -22,6 +22,6 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.java.time)
     implementation(libs.java.jwt)
-    implementation(libs.jbcrypt)
+    implementation(libs.bcrypt)
     implementation(libs.lettuce.core)
 }

